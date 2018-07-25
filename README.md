@@ -15,8 +15,7 @@ aws cloudformation create-stack \
     --stack-name simple-service-pipeline \
     --template-body file://deploy/pipeline_serverless.yml \
     --capabilities CAPABILITY_IAM \
-    --parameters file://deploy/params.json \
-    --profile vmx-training
+    --parameters file://deploy/params.json
 
 
 {
