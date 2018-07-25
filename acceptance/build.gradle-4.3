@@ -1,0 +1,36 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.1.0'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'org.junit.platform.gradle.plugin'
+
+//sourceCompatibility = 1.8
+//targetCompatibility = 1.8
+
+repositories {
+    jcenter()
+}
+
+
+test {
+    // this works with gradle 4.6, but is doing something different with 4.3
+    //environment "ENDPOINT", endpoint
+    //useJUnitPlatform()
+}
+
+dependencies {
+    testImplementation 'io.rest-assured:rest-assured:3.1.0'
+    testImplementation 'io.rest-assured:json-path:3.1.0'
+    testImplementation 'io.rest-assured:xml-path:3.1.0'
+    testImplementation 'io.rest-assured:json-schema-validator:3.1.0'
+    testImplementation 'io.rest-assured:spring-mock-mvc:3.1.0'
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.2.0")
+}

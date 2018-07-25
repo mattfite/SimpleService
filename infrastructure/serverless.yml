@@ -1,0 +1,93 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31' # this line activates the SAM transformations!a
+Description: 'Serverless'
+Parameters:
+  # S3Bucket and S3Key where the zipped code is located. This will be created with CodeBuild
+  S3Bucket:
+    Type: String
+  S3Key:
+    Type: String
+  AdminEmail:
+    Description: 'The email address of the admin who receives alerts.'
+    Type: String
+Resources:
+  # A SNS topic is used to send alerts via Email to the value of the AdminEmail parameter 
+  Alerts:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      Subscription:
+      - Endpoint: !Ref AdminEmail
+        Protocol: email
+  # 
+  # go back to the aws-velocity example to explicitly declare the API using swagger
+  # and use API gateway to provide the parameter validation
+  #
+  SimpleLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda.demo.ProxyWithStream::handleRequest
+      Runtime: java8
+      CodeUri:
+        Bucket: !Ref S3Bucket
+        Key: !Ref S3Key
+      Timeout: 5
+      Events:
+        ProxyApiRoot:
+          Type: Api
+          Properties:
+            Path: /
+            Method: ANY
+        ProxyApiGreedy:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+  ConfigLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:InvokeFunction
+        FunctionName: !Ref SimpleLambda
+        Principal: apigateway.amazonaws.com
+  # This alarm is triggered, if the java function returns or throws an Error
+  SimpleLambdaLambdaErrorsAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: 'GET /{n} lambda errors'
+      Namespace: 'AWS/Lambda'
+      MetricName: Errors
+      Dimensions:
+      - Name: FunctionName
+        Value: !Ref SimpleLambda
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+      - !Ref Alerts
+  # This alarm is triggered, if the there are too many function invocations
+  SimpleLambdaLambdaThrottlesAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: 'GET /{n} lambda throttles'
+      Namespace: 'AWS/Lambda'
+      MetricName: Throttles
+      Dimensions:
+      - Name: FunctionName
+        Value: !Ref SimpleLambda
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+      - !Ref Alerts
+# A CloudFormation stack can return information that is needed by other stacks or scripts.
+Outputs:
+  # The URL is needed to run the acceptance test against the correct endpoint
+  URL:
+    Description: 'URL to the API gateway.'
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod'
+    Export:
+      Name: !Sub '${AWS::StackName}-URL'
