@@ -4,7 +4,7 @@ Description: 'Pipeline: Serverless'
 Parameters:
   RepositoryName:
     Type: String
-    Default: 'VSaaSSimple'
+    Default: 'SimpleService'
   BranchName:
     Type: String
     Default: 'master'
