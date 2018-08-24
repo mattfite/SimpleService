@@ -94,7 +94,8 @@ Resources:
         Type: CODEPIPELINE
       Environment:
         ComputeType: 'BUILD_GENERAL1_SMALL'
-        Image: 'aws/codebuild/java:openjdk-9'
+        #Image: 'aws/codebuild/java:openjdk-9'
+        Image: 'mattfite/openjdk-9-gradle-4.6'
         Type: 'LINUX_CONTAINER'
       Name: !Sub '${AWS::StackName}-app'
       ServiceRole: !GetAtt 'CodeBuildRole.Arn'
@@ -106,9 +107,10 @@ Resources:
             build:
               commands:
               - 'echo "until gradle is updated to 4.6, cp 4.3 version"'
-              - 'cp app/build.gradle-4.3 app/build.gradle'
-              - 'cd app/ && gradle wrapper --gradle-version 4.3'
+              #- 'cp app/build.gradle-4.3 app/build.gradle'
+              - 'cd app/ && gradle wrapper --gradle-version 4.6'
               - 'cd app/ && ./gradlew test'
+              - 'find .'
             post_build:
               commands:
               - 'echo "create artifacts. SAM will compress"'
@@ -129,7 +131,8 @@ Resources:
         Type: CODEPIPELINE
       Environment:
         ComputeType: 'BUILD_GENERAL1_SMALL'
-        Image: 'aws/codebuild/java:openjdk-9'
+        #Image: 'aws/codebuild/java:openjdk-9'
+        Image: 'mattfite/openjdk-9-gradle-4.6'
         Type: 'LINUX_CONTAINER'
       Name: !Sub '${AWS::StackName}-acceptance'
       ServiceRole: !GetAtt 'CodeBuildRole.Arn'
@@ -141,9 +144,10 @@ Resources:
             build:
               commands:
               - 'echo "until gradle is updated to 4.6, cp 4.3 version"'
-              - 'cp acceptance/build.gradle-4.3 acceptance/build.gradle'
-              - 'cd acceptance/ && gradle wrapper --gradle-version 4.3'
+              #- 'cp acceptance/build.gradle-4.3 acceptance/build.gradle'
+              - 'cd acceptance/ && gradle wrapper --gradle-version 4.6'
               #- 'cd acceptance/ && ./gradlew test'
+              - 'find .'
             post_build:
               commands:
               - 'echo "integration test setup complete"'
@@ -207,7 +211,8 @@ Resources:
         Type: CODEPIPELINE
       Environment:
         ComputeType: 'BUILD_GENERAL1_SMALL'
-        Image: 'aws/codebuild/java:openjdk-9'
+        #Image: 'aws/codebuild/java:openjdk-9'
+        Image: 'mattfite/openjdk-9-gradle-4.6'
         Type: 'LINUX_CONTAINER'
       Name: !Sub '${AWS::StackName}-run-acceptance'
       ServiceRole: !GetAtt 'RunAcceptanceCodeBuildRole.Arn'
@@ -219,6 +224,7 @@ Resources:
             build: # execute acceptance tests against the acceptance stack
               commands:
               - 'cd acceptance/ && ENDPOINT=`aws cloudformation describe-stacks --stack-name ${AWS::StackName}-acceptance --query "Stacks[0].Outputs[?OutputKey==''URL''].OutputValue" --output text` ./gradlew clean test'
+              - 'find .'
       TimeoutInMinutes: 10
   Pipeline:
     Type: 'AWS::CodePipeline::Pipeline'
